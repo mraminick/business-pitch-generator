@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Best Bad Idea Builder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky header with idea switcher + tabs; Build = step rail + worksheet, Pitch = document, Deck = 16:9 stage + thumbnails */
+:root{
+  --paper:#F4F6F3; --surface:#FFFFFF; --ink:#15233A; --muted:#5A6577; --line:#D9DEE3;
+  --accent:#E3A01B; --accent-ink:#8A5A00; --hl:#FBE29A; --hl-soft:#FFF8E3;
+  --blue:#2C5E8F; --good:#2E7D5B; --warn:#B4541E;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --hdr:120px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0F1622; --surface:#172131; --ink:#E8EDF4; --muted:#98A4B7; --line:#28354B;
+  --accent:#F2B544; --accent-ink:#F7D488; --hl:rgba(242,181,68,.30); --hl-soft:rgba(242,181,68,.08);
+  --blue:#8DB8E4; --good:#6CC59B; --warn:#F0956B; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#0F1622; --surface:#172131; --ink:#E8EDF4; --muted:#98A4B7; --line:#28354B;
+  --accent:#F2B544; --accent-ink:#F7D488; --hl:rgba(242,181,68,.30); --hl-soft:rgba(242,181,68,.08);
+  --blue:#8DB8E4; --good:#6CC59B; --warn:#F0956B; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+body{background:var(--paper);color:var(--ink);font:15px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--paper)}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* Header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--paper);border-bottom:1px solid var(--line)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:12px 8px}
+.brand{display:flex;flex-direction:column;min-width:0;margin-right:auto}
+.brand h1{font-size:21px;font-weight:800;line-height:1.1}
+.brand h1 span{background:linear-gradient(transparent 58%, var(--hl) 58%);padding:0 2px}
+.brand small{color:var(--muted);font-size:12.5px}
+.brand small a{color:inherit}
+.ideas{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+select,input,textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px}
+select{padding:7px 10px;max-width:260px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:500;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.primary:hover{opacity:.9}
+.btn.accent{background:var(--accent);color:#1D1400;border-color:var(--accent)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn.danger{color:var(--warn);border-color:var(--warn)}
+.btn[disabled]{opacity:.5;cursor:default}
+.status{font:12px var(--mono);color:var(--muted);white-space:nowrap}
+.tabsrow{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 20px}
+.tabs{display:flex;gap:4px;overflow-x:auto}
+.tab{padding:9px 14px 10px;border:0;background:none;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.ready{display:flex;align-items:center;gap:10px;padding-bottom:10px;font:12px var(--mono);color:var(--muted)}
+.meter{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+
+/* Build */
+.build{display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;padding-block:28px 96px}
+nav.rail{position:sticky;top:calc(var(--hdr) + 20px);align-self:start;display:flex;flex-direction:column;gap:2px}
+.rail a{display:grid;grid-template-columns:14px 1fr;gap:10px;align-items:start;padding:7px 8px;border-radius:8px;text-decoration:none;color:var(--ink)}
+.rail a:hover{background:var(--surface)}
+.rail .dot{width:10px;height:10px;margin-top:5px;border-radius:50%;border:2px solid var(--line)}
+.rail .dot.part{border-color:var(--accent)}
+.rail .dot.done{border-color:var(--accent);background:var(--accent)}
+.rail .re{display:block;font:11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rail .rt{display:block;font-size:14px;font-weight:500;line-height:1.3}
+.rail .split{margin:10px 8px 4px;font:11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.sheet{min-width:0;display:flex;flex-direction:column}
+.banner{padding:12px 16px;border:1px dashed var(--accent);border-radius:10px;background:var(--hl-soft);font-size:14px;margin-bottom:8px}
+section.step{padding-block:34px;border-top:1px solid var(--line);scroll-margin-top:calc(var(--hdr) + 8px);display:flex;flex-direction:column;gap:18px}
+section.step:first-of-type{border-top:0;padding-top:8px}
+.eyebrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font:12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tag{padding:2px 8px;border-radius:99px;font-size:10.5px;letter-spacing:.06em;border:1px solid currentColor}
+.tag.ep{color:var(--accent-ink)}
+.tag.inv{color:var(--blue)}
+section.step h2{font-size:30px;font-weight:700;line-height:1.15}
+.lesson{max-width:66ch;color:var(--muted);margin:0}
+.fields{display:flex;flex-direction:column;gap:18px;max-width:760px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0;border:0;padding:0;margin:0}
+.field label,.field legend,.field .lbl{font-weight:600;font-size:14.5px;padding:0}
+.opt{font:11px var(--mono);color:var(--muted);font-weight:500;margin-left:6px;text-transform:uppercase;letter-spacing:.05em}
+.hint{margin:-2px 0 2px;color:var(--muted);font-size:13px}
+input[type=text],input[type=number],textarea{width:100%;padding:10px 12px;line-height:1.45}
+textarea{resize:vertical;min-height:76px}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+input[type=number]{max-width:160px;font-variant-numeric:tabular-nums}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:6px}
+.card{position:relative;display:flex;flex-direction:column;gap:3px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer}
+.card input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.card:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--hl-soft)}
+.card:has(input:focus-visible){outline:2px solid var(--blue);outline-offset:2px}
+.card-l{font-weight:600}
+.card-d{font-size:13px;color:var(--muted)}
+.avatar-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.nums{display:flex;flex-wrap:wrap;gap:18px}
+.steps-edit{list-style:none;margin:4px 0 6px;padding:0;display:flex;flex-direction:column;gap:8px;counter-reset:st}
+.steps-edit li{display:grid;grid-template-columns:32px 1fr auto;gap:8px;align-items:center;counter-increment:st}
+.steps-edit li::before{content:counter(st);font:600 13px var(--mono);width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--hl);color:var(--ink)}
+.steps-edit.check li::before{content:"✓"}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;padding:6px 8px;border-radius:6px}
+.x:hover{color:var(--warn);background:var(--surface)}
+
+/* Widgets */
+.widget{max-width:760px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.widget h3{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.madlib{font-family:var(--display);font-size:clamp(19px,2.4vw,25px);line-height:1.4;font-weight:600}
+.madlib mark{background:linear-gradient(transparent 56%, var(--hl) 56%);color:inherit;padding:0 2px}
+.gap{font:inherit;color:var(--muted);background:none;border:0;border-bottom:1.5px dashed currentColor;padding:0 2px;cursor:pointer;border-radius:0}
+.gap:hover{color:var(--accent-ink)}
+.segs{display:flex;gap:4px}
+.segs i{flex:1;height:8px;border-radius:2px;background:var(--line)}
+.segs i.on{background:var(--accent)}
+.segs.ok i.on{background:var(--good)}
+.mnote{font-size:13.5px;color:var(--muted)}
+.mnote b{color:var(--ink)}
+.ladder{width:100%;border-collapse:collapse;font-size:13.5px}
+.ladder td{padding:6px 0;border-top:1px solid var(--line)}
+.ladder td:last-child{text-align:right;font:500 13px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:12px}
+.qs{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.msg{white-space:pre-wrap;font-size:14.5px;padding:14px 16px;border-radius:10px;background:var(--paper);border:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.prog{display:flex;align-items:center;gap:10px;font:12px var(--mono);color:var(--muted)}
+.prog .meter{width:160px}
+
+/* Pitch */
+.view{padding-block:28px 96px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:18px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;padding:3px;background:var(--surface)}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:500;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.note{font-size:13.5px;color:var(--muted);margin:0 0 14px}
+.note.warn{color:var(--warn)}
+.doc{max-width:70ch;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(20px,4vw,44px)}
+.doc h2{font-size:32px;font-weight:800;margin-bottom:6px}
+.doc h3{font-size:19px;font-weight:700;margin:26px 0 6px}
+.doc p{margin:8px 0}
+.doc ul,.doc ol{margin:8px 0;padding-left:22px}
+.doc li{margin:3px 0}
+.doc .elev{font-family:var(--display);font-size:20px;line-height:1.45;font-weight:600}
+.doc .think{color:var(--muted);font-style:italic}
+
+/* Deck */
+.stage{max-width:980px;margin:0 auto}
+.stage:fullscreen{max-width:none;background:#0A0F18;display:grid;place-items:center;padding:0}
+.stage:fullscreen .slide{width:min(100vw, 177.78vh);border-radius:0;box-shadow:none}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;max-width:980px;margin:22px auto 0}
+.thumb{padding:0;border:2px solid transparent;border-radius:8px;background:none;cursor:pointer;display:block;width:100%}
+.thumb[aria-current="true"]{border-color:var(--accent)}
+.counter{font:13px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;min-width:56px;text-align:center}
+
+/* Slides: a fixed presentation palette, independent of page theme */
+.slide{position:relative;width:100%;aspect-ratio:16/9;container-type:inline-size;overflow:hidden;background:#FFFFFF;color:#15233A;border-radius:8px;box-shadow:0 1px 2px rgba(10,20,40,.08),0 8px 28px rgba(10,20,40,.10);padding:5.2cqi 6cqi 4.4cqi;display:flex;flex-direction:column;gap:2.2cqi;font-family:var(--body);text-align:left}
+.slide.dark{background:#15233A;color:#EEF2F7}
+.s-kicker{font:600 1.35cqi var(--mono);letter-spacing:.18em;text-transform:uppercase;color:#A26E06;display:flex;flex-direction:column;gap:1cqi}
+.s-kicker::after{content:"";width:4.5cqi;height:.45cqi;background:#E3A01B}
+.slide.dark .s-kicker{color:#F2B544}
+.s-title{font:700 3.6cqi/1.15 var(--display);letter-spacing:-.01em;text-wrap:balance}
+.s-xl{font-size:6.2cqi;font-weight:800;margin-top:auto}
+.s-sub{font:500 2.3cqi/1.4 var(--display);color:#C5CFDD;max-width:80%}
+.s-foot{margin-top:auto;font-size:1.6cqi;color:#A9B4C6}
+.s-lead{margin:0;font-size:1.9cqi;color:#4E5A6C;line-height:1.45}
+.slide.dark .s-lead{color:#C5CFDD}
+.s-bullets{margin:0;padding-left:2.4cqi;font-size:2cqi;line-height:1.4;display:flex;flex-direction:column;gap:1.1cqi}
+.s-bullets li::marker{color:#E3A01B}
+.s-tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:1.6cqi;flex:1;min-height:0}
+.s-tiles.n3{grid-template-columns:repeat(3,1fr)}
+.s-tile{background:#F1F4F7;border-radius:1cqi;padding:1.8cqi 2cqi;display:flex;flex-direction:column;gap:.8cqi;min-height:0;overflow:hidden}
+.s-tl{font:600 1.2cqi var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#A26E06}
+.s-tv{font-size:1.85cqi;line-height:1.4}
+.s-chips{display:flex;flex-wrap:wrap;gap:1cqi}
+.s-chip{display:inline-flex;flex-direction:column;gap:.3cqi;padding:1.1cqi 1.6cqi;border-radius:1cqi;background:#FFF3D1;font-size:1.8cqi}
+.s-chip b{font:600 1.05cqi var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#8A5A00}
+.s-steps{display:grid;gap:2cqi;margin-top:1cqi}
+.s-step{display:flex;flex-direction:column;gap:1.2cqi}
+.s-step .n{width:5cqi;height:5cqi;border-radius:50%;background:#E3A01B;color:#15233A;display:grid;place-items:center;font:700 2.2cqi var(--display)}
+.s-step .t{font:600 2.1cqi/1.3 var(--display)}
+.s-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:2cqi}
+.s-stat .v{font:800 6cqi/1 var(--display);font-variant-numeric:tabular-nums}
+.s-stat .l{font-size:1.6cqi;color:#5A6577;margin-top:.6cqi}
+.s-big{font:800 7cqi/1 var(--display);color:#F2B544}
+.s-cols{display:grid;grid-template-columns:1fr 1fr;gap:4cqi;flex:1;min-height:0}
+.s-cols h4{margin:0 0 1cqi;font:600 1.3cqi var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#A9B4C6}
+.s-num{position:absolute;right:3cqi;bottom:2.4cqi;font:500 1.2cqi var(--mono);color:#9AA4B2}
+.slide .gap{color:#8A94A3;cursor:default}
+.slide.dark .gap{color:#8696AE}
+.s-tile .gap,.s-chip .gap{border-bottom-width:1px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:10px;font-size:14px;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:calc(100vw - 32px)}
+
+@media (max-width:860px){
+  .build{grid-template-columns:1fr;gap:12px;padding-top:16px}
+  nav.rail{position:static;flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:6px;scrollbar-width:thin}
+  .rail a{grid-template-columns:12px auto;white-space:nowrap;border:1px solid var(--line);background:var(--surface)}
+  .rail .re{display:none}
+  .rail .split{display:none}
+  section.step h2{font-size:25px}
+  .ready .meter{width:70px}
+}
+</style>
+
+<header class="top" id="hdr">
+  <div class="wrap">
+    <div class="bar">
+      <div class="brand">
+        <h1><span>Best Bad Idea</span> Builder</h1>
+        <small>Built on Alex Hormozi’s five-step method from <a href="https://podcasts.apple.com/us/podcast/the-game-with-alex-hormozi/id1254720112?i=1000800960481" target="_blank" rel="noopener">The Game, ep. 1014</a></small>
+      </div>
+      <div class="ideas">
+        <label for="idea-sel" class="status">Idea</label>
+        <select id="idea-sel"></select>
+        <button class="btn sm" id="btn-new" type="button">New idea</button>
+        <button class="btn sm ghost" id="btn-dup" type="button">Duplicate</button>
+        <button class="btn sm ghost" id="btn-del" type="button">Delete</button>
+        <span class="status" id="status" aria-live="polite">Loading…</span>
+      </div>
+    </div>
+    <div class="tabsrow">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tab-build" data-view="build" type="button">1 · Fill in the framework</button>
+        <button class="tab" role="tab" id="tab-pitch" data-view="pitch" type="button">2 · Investor pitch</button>
+        <button class="tab" role="tab" id="tab-deck" data-view="deck" type="button">3 · Pitch deck</button>
+      </div>
+      <div class="ready"><span id="ready-txt">0% pitch-ready</span><span class="meter"><i id="ready-bar"></i></span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="view-build" class="build">
+    <nav class="rail" id="rail" aria-label="Framework steps"></nav>
+    <div class="sheet" id="sheet"></div>
+  </div>
+
+  <div id="view-pitch" class="view" hidden>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Pitch version">
+        <button type="button" id="pv-draft" aria-pressed="true">Framework draft</button>
+        <button type="button" id="pv-polish" aria-pressed="false">Claude polish</button>
+      </div>
+      <div class="row">
+        <button class="btn accent" id="btn-polish" type="button" hidden>Polish with Claude</button>
+        <button class="btn" id="btn-stop" type="button" hidden>Stop</button>
+        <button class="btn" id="btn-copy-pitch" type="button">Copy text</button>
+        <button class="btn primary" id="btn-dl-md" type="button" hidden>Download .md</button>
+      </div>
+    </div>
+    <p class="note" id="pitch-note"></p>
+    <article class="doc" id="pitch-doc"></article>
+  </div>
+
+  <div id="view-deck" class="view" hidden>
+    <div class="toolbar">
+      <div class="row">
+        <button class="btn" id="d-prev" type="button" aria-label="Previous slide">←</button>
+        <span class="counter" id="d-count">1 / 10</span>
+        <button class="btn" id="d-next" type="button" aria-label="Next slide">→</button>
+        <button class="btn ghost" id="d-present" type="button">Present full screen</button>
+      </div>
+      <div class="row">
+        <span class="status" id="deck-gaps"></span>
+        <button class="btn primary" id="btn-dl-pptx" type="button" hidden>Download .pptx</button>
+      </div>
+    </div>
+    <div class="stage" id="stage"></div>
+    <div class="thumbs" id="thumbs"></div>
+  </div>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ---------- Framework definition ---------- */
+const P_OPTS=[
+  {v:'pain',l:'Pain',d:'Something you went through and overcame.'},
+  {v:'profession',l:'Profession',d:'A skill from your day job, now or in the past.'},
+  {v:'passion',l:'Passion',d:'What you read, watch and can’t get enough of.'}];
+const WHO_OPTS=[
+  {v:'like-you',l:'People like you',d:'You already know their pains. The quickest start.'},
+  {v:'helped',l:'People you’ve helped',d:'Paid, or as a favor.'},
+  {v:'underserved',l:'An underserved market',d:'Big demand, few good options. Needs more research.'}];
+const MECH_OPTS=[
+  {v:'sequence',l:'Steps in order',d:'Do 1, then 2, then 3.'},
+  {v:'checklist',l:'Checklist',d:'Do all of them, in any order.'}];
+
+const SECTIONS=[
+ {id:'basics',eyebrow:'Start here',title:'Name the idea',
+  lesson:'Pick anything. Your first pick only starts the feedback loop: you put out your best bad idea, then make it less wrong until it becomes a good one.',
+  fields:[{k:'idea_name',label:'Working name',ph:'e.g. Billable'},
+          {k:'founder',label:'Founder or team',ph:'Your name(s)',opt:true}]},
+ {id:'what',eyebrow:'Step 1 · The what',title:'Find it in the 3 P’s',tag:'ep',
+  lesson:'Almost every business starts from one of three places: a pain you went through and overcame, a profession people already pay you for, or a passion you can’t stop consuming. Solving one narrow problem is enough to be a business.',
+  fields:[{k:'p_type',label:'Where does this idea come from?',type:'choice',opts:P_OPTS},
+          {k:'what_problem',label:'The one specific problem you solve',type:'area',ph:'Keep it narrow. e.g. Dietitians can’t bill insurance for their private clients.'},
+          {k:'what_origin',label:'Your story with it',hint:'How you lived it, learned it or obsessed over it. This becomes your founder-fit slide.',type:'area',ph:'e.g. I had one day a week to bill private clients, so I had to crack insurance billing fast.'}]},
+ {id:'who',eyebrow:'Step 2 · The who',title:'Narrow the avatar',tag:'ep',widget:'callout',
+  lesson:'Pick people like you, people you’ve helped, or an underserved market. Then describe them with at least three filters, narrow enough that they know you mean them. Narrower means fewer competitors and a higher price.',
+  fields:[{k:'who_type',label:'Who are you serving?',type:'choice',opts:WHO_OPTS},
+          {k:'who_age',label:'Age',ph:'e.g. 35-year-old',group:true},
+          {k:'who_gender',label:'Gender',ph:'e.g. male, women, moms',group:true},
+          {k:'who_profession',label:'Profession',ph:'e.g. accountants',group:true},
+          {k:'who_pain',label:'Pain or problem',ph:'e.g. who are bored at their jobs',group:true},
+          {k:'who_interest',label:'Interest or passion',ph:'e.g. and love fantasy football',group:true},
+          {k:'who_callout',label:'Edit the call-out',hint:'Leave blank to use the one built from your filters.',opt:true}]},
+ {id:'good',eyebrow:'Step 3 · How, part 1',title:'The good stuff they get',tag:'ep',
+  lesson:'Describe the upside with the four parts of the value equation, written in the positive: the dream outcome, how fast it comes, how certain it is, and how easy it is. Specific claims get believed; vague ones get ignored.',
+  fields:[{k:'good_dream',label:'The dream outcome',hint:'Start with a verb so it reads “I help them …”.',ph:'e.g. get paid by insurance for every private client'},
+          {k:'good_speed',label:'How fast',ph:'e.g. first claim paid within 30 days'},
+          {k:'good_certainty',label:'Why it’s close to guaranteed',hint:'Stats, results, a guarantee, or what you’ve done yourself.',type:'area'},
+          {k:'good_ease',label:'Why it’s easy',ph:'e.g. fill-in claim templates; one evening a week'}]},
+ {id:'bad',eyebrow:'Step 4 · How, part 2',title:'The bad stuff they avoid',tag:'ep',widget:'interview',
+  lesson:'People act to get good stuff or to avoid bad stuff. Describe the pain so precisely they wonder how you know. Things feel hard when we must start doing what we hate or give up what we love, so name both.',
+  fields:[{k:'bad_specific',label:'Their pain, in their own words',type:'area',ph:'e.g. Spending a Saturday on hold with an insurer, then getting denied anyway.'},
+          {k:'bad_start',label:'What they’d normally have to start doing, and hate',hint:'Start with an -ing verb.',ph:'e.g. learning medical coding from scratch'},
+          {k:'bad_giveup',label:'What they’d normally have to give up, and love',hint:'Start with an -ing verb.',ph:'e.g. quitting a stable hospital job first'},
+          {k:'bad_slow',label:'How slow the usual way is',ph:'e.g. 6+ months of trial and error'},
+          {k:'bad_risk',label:'Risks they avoid',ph:'e.g. denied claims, clawbacks, compliance mistakes'},
+          {k:'interviews',label:'Customer interviews done',type:'num',opt:true,inline:true},
+          {k:'interview_notes',label:'What you heard',type:'area',opt:true}]},
+ {id:'combine',eyebrow:'Step 5 · Combine',title:'Your one-sentence offer',tag:'ep',widget:'oneliner',
+  lesson:'Drop it all into one sentence: I help [who] get [good stuff] without [bad stuff]. Add your mechanism once you have one. If the right person reads it and thinks “that’s me,” it works.',
+  fields:[{k:'ml_without',label:'Without … (the bad stuff, short)',hint:'Leave blank to use what they’d have to give up.',ph:'e.g. quitting their hospital job first',opt:true},
+          {k:'oneliner_override',label:'Edit the final sentence',hint:'Leave blank to keep the sentence built from your answers.',type:'area',opt:true}]},
+ {id:'mech',eyebrow:'Bonus 1',title:'Name your unique mechanism',tag:'ep',
+  lesson:'Your mechanism is the list or sequence of steps that gets the result, wrapped up and named so it becomes your proprietary process, like the Weight Watchers point system. Rhymes and alliteration make names stick.',
+  fields:[{k:'mech_type',label:'Shape of your process',type:'choice',opts:MECH_OPTS},
+          {k:'mech_steps',label:'The steps',type:'steps'},
+          {k:'mech_name',label:'Its name',ph:'e.g. The 4C Billing Method'},
+          {k:'mech_proof',label:'Proof it works',hint:'Promise, proof, plan: what have you or your customers achieved with it?',type:'area',opt:true}]},
+ {id:'first5',eyebrow:'Bonus 2',title:'Get your first five customers',tag:'ep',widget:'outreach',
+  lesson:'Warm outreach: greet someone, pay them a specific compliment, share your one-sentence offer, and ask whether they know anyone it would help. Do it four hours a day or until you’ve sent 100.',
+  fields:[{k:'out_compliment',label:'A specific compliment (sample)',ph:'e.g. Loved your post about leaving clinical work',opt:true},
+          {k:'out_sent',label:'Messages sent',type:'num',opt:true,inline:true},
+          {k:'out_customers',label:'Customers so far',type:'num',opt:true,inline:true}]},
+ {id:'model',eyebrow:'Investor layer',title:'Business model and market',tag:'inv',
+  lesson:'The episode gets you to a first customer. Investors also need to know how this makes money, how big it can get and why you win. Your narrow niche is part of the answer: more specific means a higher price and fewer rivals.',
+  fields:[{k:'inv_price',label:'Price point',ph:'e.g. $199/month'},
+          {k:'inv_model',label:'How you make money',hint:'One revenue line per line.',type:'area'},
+          {k:'inv_market',label:'Market size',hint:'How many people fit your avatar, and what they spend on this problem.',type:'area'},
+          {k:'inv_whynow',label:'Why now',type:'area',opt:true},
+          {k:'inv_competition',label:'Competition and why you win',type:'area'}]},
+ {id:'raise',eyebrow:'Investor layer',title:'Traction, team and the ask',tag:'inv',
+  lesson:'Lead with proof. At this stage interviews, outreach and first customers all count, and the numbers from the steps above are added for you. Then say exactly how much you want and what it buys.',
+  fields:[{k:'inv_traction',label:'Traction and proof',hint:'One point per line.',type:'area'},
+          {k:'inv_team',label:'Team',hint:'One person or strength per line.',type:'area'},
+          {k:'inv_ask',label:'The ask',ph:'e.g. $250K pre-seed'},
+          {k:'inv_funds',label:'Use of funds',hint:'One line per bucket.',type:'area'},
+          {k:'inv_milestones',label:'Milestones this money hits',hint:'One per line.',type:'area'}]}
+];
+const LABEL={}; SECTIONS.forEach(s=>s.fields.forEach(f=>LABEL[f.k]=f.label));
+Object.assign(LABEL,{idea_name:'Business name',good_dream:'Dream outcome',bad_specific:'Their pain',bad_start:'What they hate starting',bad_giveup:'What they hate giving up',bad_slow:'How slow it is today',bad_risk:'Risks',good_speed:'How fast',good_certainty:'Proof of certainty',good_ease:'Why it’s easy',mech_name:'Mechanism name',mech_steps:'Mechanism steps',inv_price:'Price point',inv_model:'Revenue model',inv_market:'Market size',inv_competition:'Why you win',inv_traction:'Traction',inv_team:'Team',inv_ask:'The ask',inv_funds:'Use of funds',inv_milestones:'Milestones',what_origin:'Your story',what_problem:'The problem'});
+const AVATAR=['who_age','who_gender','who_profession','who_pain','who_interest'];
+const AV_LABEL={who_age:'Age',who_gender:'Gender',who_profession:'Profession',who_pain:'Pain',who_interest:'Interest'};
+
+const EXAMPLE={
+  example:true,pristine:true,idea_name:'Billable',founder:'',
+  p_type:'profession',
+  what_problem:'Registered dietitians can’t figure out how to bill insurance for private clients, so they leave money on the table or stay stuck in hospital jobs.',
+  what_origin:'Worked six 12-hour days a week as a hospital dietitian with one day left for private clients, so I had to learn insurance billing fast.',
+  who_type:'like-you',who_age:'30–45-year-old',who_gender:'',who_profession:'registered dietitians',who_pain:'who are burned out on hospital shifts',who_interest:'and want their own private practice',who_callout:'',
+  good_dream:'get paid by insurance for every private client',good_speed:'First insurance claim paid within 30 days',
+  good_certainty:'Pre-built claim templates and a denial checklist covering the most common rejection reasons.',
+  good_ease:'Fill-in templates; billing takes one evening a week',
+  bad_specific:'Spending a whole Saturday on hold with an insurer, then getting the claim denied anyway.',
+  bad_start:'learning medical coding from scratch',bad_giveup:'quitting a stable hospital job before the practice pays',
+  bad_slow:'months of trial and error on credentialing alone',bad_risk:'Denied claims, clawbacks and compliance mistakes',
+  interviews:12,interview_notes:'Everyone named credentialing as the scariest part. Most had tried a generic medical-billing course and quit.',
+  ml_without:'quitting their hospital job first',oneliner_override:'',
+  mech_type:'sequence',mech_steps:['Credential','Code','Claim','Collect'],mech_name:'The 4C Billing Method',
+  mech_proof:'Built and used it to bill my own private clients one day a week.',
+  out_compliment:'Loved your post about leaving clinical work',out_sent:140,out_customers:3,
+  inv_price:'$199/month',
+  inv_model:'Paid community membership at $199/month\nLive group billing clinics included\nDone-for-you credentialing add-on at $1,500',
+  inv_market:'Registered dietitians moving from hospital work into private practice. [Add a sourced count and annual spend.]',
+  inv_whynow:'More insurers cover medical nutrition therapy, and telehealth lets dietitians see clients anywhere.',
+  inv_competition:'Generic medical-billing courses aren’t built for dietitians, and billing services take a cut of every claim. We teach dietitians to own the process for a flat fee.',
+  inv_traction:'Waitlist from warm outreach\nFirst members renewing month two',
+  inv_team:'Former hospital dietitian who built a private practice billing insurance one day a week',
+  inv_ask:'$250K pre-seed',
+  inv_funds:'Curriculum and templates: 40%\nCommunity growth: 40%\nBilling-software integrations: 20%',
+  inv_milestones:'500 paying members\nCredentialing add-on live in 3 states'
+};
+
+/* ---------- Helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const filled=v=>Array.isArray(v)?v.some(s=>String(s||'').trim()):(v!==undefined&&v!==null&&String(v).trim()!=='');
+const trim=v=>String(v??'').trim();
+const lines=v=>trim(v).split('\n').map(s=>s.replace(/^\s*[-•*]\s*/,'').trim()).filter(Boolean);
+const uid=()=>'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const num=v=>Number(v)||0;
+
+let ideas={}, currentId=null, view='build', deckIdx=0, pitchMode='draft';
+const cur=()=>ideas[currentId];
+
+function avatarCount(i){return AVATAR.filter(k=>filled(i[k])).length}
+function calloutText(i){return filled(i.who_callout)?trim(i.who_callout):AVATAR.map(k=>trim(i[k])).filter(Boolean).join(' ')}
+function withoutText(i){return trim(i.ml_without)||trim(i.bad_giveup)||trim(i.bad_start)}
+function stepsList(i){return (i.mech_steps||[]).map(trim).filter(Boolean)}
+const F=(i,k,m)=>({v:i[k],m:m||LABEL[k]||k,k});
+const CALLOUT=i=>({v:calloutText(i),m:'Who you help',k:'who_age'});
+const WITHOUT=i=>({v:withoutText(i),m:'The bad stuff',k:'ml_without'});
+
+function onelinerSegs(i){
+  if(filled(i.oneliner_override)) return [{v:trim(i.oneliner_override),k:'oneliner_override',m:'One-liner'}];
+  const s=['I help ',CALLOUT(i),' ',F(i,'good_dream'),' without ',WITHOUT(i)];
+  if(filled(i.mech_name)) s.push(' through ',F(i,'mech_name'));
+  s.push('.'); return s;
+}
+function segsHTML(segs,{mark=false,gaps=true,inert=false}={}){
+  return segs.map(s=>{
+    if(typeof s==='string') return esc(s);
+    if(filled(s.v)) return mark?`<mark>${esc(trim(s.v))}</mark>`:esc(trim(s.v));
+    if(!gaps) return '';
+    return inert?`<span class="gap">${esc(s.m)}</span>`:`<button type="button" class="gap" data-goto="${s.k}">${esc(s.m)}</button>`;
+  }).join('');
+}
+function segsText(segs,gapFmt=m=>`[${m}]`){return segs.map(s=>typeof s==='string'?s:(filled(s.v)?trim(s.v):gapFmt(s.m))).join('')}
+function gapCount(segLists){let n=0;segLists.forEach(segs=>segs.forEach(s=>{if(typeof s!=='string'&&!filled(s.v))n++}));return n}
+
+/* ---------- Completeness ---------- */
+function checks(i){
+  const out=[];
+  SECTIONS.forEach(s=>s.fields.forEach(f=>{
+    if(f.opt||f.group) return;
+    out.push({sec:s.id,ok:f.type==='steps'?stepsList(i).length>=2:filled(i[f.k])});
+  }));
+  out.push({sec:'who',ok:avatarCount(i)>=3||filled(i.who_callout)});
+  return out;
+}
+
+/* ---------- Build view ---------- */
+function fieldHTML(f){
+  const id='f-'+f.k, hint=f.hint?`<p class="hint">${esc(f.hint)}</p>`:'', opt=f.opt?'<span class="opt">optional</span>':'';
+  if(f.type==='choice') return `<fieldset class="field" id="${id}"><legend>${esc(f.label)}</legend>${hint}<div class="cards">${f.opts.map(o=>`<label class="card"><input type="radio" name="r-${f.k}" value="${o.v}" id="${id}-${o.v}" data-radio="${f.k}"><span class="card-l">${esc(o.l)}</span><span class="card-d">${esc(o.d)}</span></label>`).join('')}</div></fieldset>`;
+  if(f.type==='steps') return `<div class="field"><span class="lbl">${esc(f.label)}</span><p class="hint">Three to six short steps, a word or two each.</p><ol class="steps-edit" id="steps-list"></ol><div><button type="button" class="btn sm" data-act="add-step">Add a step</button></div></div>`;
+  const ctl=f.type==='area'
+    ?`<textarea id="${id}" data-k="${f.k}" rows="3" placeholder="${esc(f.ph||'')}"></textarea>`
+    :`<input id="${id}" data-k="${f.k}" type="${f.type==='num'?'number':'text'}" ${f.type==='num'?'min="0" inputmode="numeric" data-num="1"':''} placeholder="${esc(f.ph||'')}" autocomplete="off">`;
+  return `<div class="field"><label for="${id}">${esc(f.label)}${opt}</label>${hint}${ctl}</div>`;
+}
+function sectionHTML(s){
+  let body='', inGroup=false, inNums=false;
+  s.fields.forEach(f=>{
+    if(f.group&&!inGroup){body+='<div class="avatar-grid">';inGroup=true}
+    if(!f.group&&inGroup){body+='</div>';inGroup=false}
+    if(f.inline&&!inNums){body+='<div class="nums">';inNums=true}
+    if(!f.inline&&inNums){body+='</div>';inNums=false}
+    body+=fieldHTML(f);
+  });
+  if(inGroup) body+='</div>'; if(inNums) body+='</div>';
+  const tag=s.tag==='ep'?'<span class="tag ep">From the episode</span>':s.tag==='inv'?'<span class="tag inv">Investor layer</span>':'';
+  const widget=s.widget?`<div class="widget" id="w-${s.widget}"></div>`:'';
+  return `<section class="step" id="s-${s.id}"><div class="eyebrow">${esc(s.eyebrow)} ${tag}</div><h2>${esc(s.title)}</h2><p class="lesson">${esc(s.lesson)}</p><div class="fields">${body}</div>${widget}</section>`;
+}
+function renderBuildShell(){
+  $('#sheet').innerHTML=`<div class="banner" id="ex-banner" hidden>This is a filled-in example based on the dietitian story from the episode. Choose <b>New idea</b> to start your own, or edit this one.</div>`+SECTIONS.map(sectionHTML).join('');
+  let r='', split=false;
+  SECTIONS.forEach(s=>{
+    if(s.tag==='inv'&&!split){r+='<div class="split">For investors</div>';split=true}
+    r+=`<a href="#s-${s.id}" data-sec="${s.id}"><span class="dot" id="dot-${s.id}"></span><span><span class="re">${esc(s.eyebrow)}</span><span class="rt">${esc(s.title)}</span></span></a>`;
+  });
+  $('#rail').innerHTML=r;
+}
+function fillForm(){
+  const i=cur(); if(!i) return;
+  SECTIONS.forEach(s=>s.fields.forEach(f=>{
+    if(f.type==='choice'){f.opts.forEach(o=>{const el=document.getElementById(`f-${f.k}-${o.v}`); if(el) el.checked=i[f.k]===o.v});return}
+    if(f.type==='steps') return;
+    const el=document.getElementById('f-'+f.k); if(el) el.value=i[f.k]??'';
+  }));
+  renderSteps(); $('#ex-banner').hidden=!i.example; refreshDerived();
+}
+function renderSteps(){
+  const i=cur(); if(!i.mech_steps||!i.mech_steps.length) i.mech_steps=['','',''];
+  const ol=$('#steps-list'); ol.className='steps-edit'+(i.mech_type==='checklist'?' check':'');
+  ol.innerHTML=i.mech_steps.map((s,n)=>`<li><input type="text" id="f-mech_steps-${n}" data-step="${n}" value="${esc(s)}" placeholder="Step ${n+1}" aria-label="Step ${n+1}" autocomplete="off"><button type="button" class="x" data-act="rm-step" data-i="${n}" aria-label="Remove step ${n+1}">✕</button></li>`).join('');
+  $('[data-act="add-step"]').disabled=i.mech_steps.length>=8;
+}
+
+function renderWidgets(){
+  const i=cur();
+  // Call-out + niche meter
+  const n=avatarCount(i), ok=n>=3||filled(i.who_callout);
+  $('#w-callout').innerHTML=`<h3>Your call-out</h3>
+    <div class="madlib">${filled(calloutText(i))?`<mark>${esc(calloutText(i))}</mark>`:'<span class="mnote">Fill in the filters above and your call-out appears here.</span>'}</div>
+    <div class="segs ${ok?'ok':''}" aria-hidden="true">${AVATAR.map((_,x)=>`<i class="${x<n?'on':''}"></i>`).join('')}</div>
+    <p class="mnote">${ok?`<b>Narrow enough.</b> Picture a room full of these people. If you’d be excited to walk in and help them, keep it.`:`<b>${n} of 3 filters.</b> Add ${3-n} more so they know you mean them.`}</p>
+    <h3>Specific sells for more</h3>
+    <table class="ladder"><tbody>
+      <tr><td>Time management</td><td>~$19</td></tr>
+      <tr><td>… for salespeople</td><td>~$199</td></tr>
+      <tr><td>… for outbound salespeople</td><td>~$1,999</td></tr>
+      <tr><td>… for outbound reps selling garden and power tools</td><td>~$10,000</td></tr>
+    </tbody></table>`;
+  // Interview script
+  $('#w-interview').innerHTML=`<h3>Not your pain? Ask the people you want to sell to</h3>
+    <ol class="qs" id="qs">${QUESTIONS.map(q=>`<li>${esc(q)}</li>`).join('')}</ol>
+    <div class="row"><button type="button" class="btn sm" data-act="copy-qs">Copy interview questions</button></div>`;
+  // One-liner
+  const segs=onelinerSegs(i);
+  $('#w-oneliner').innerHTML=`<h3>${filled(i.mech_name)?'Advanced version · with your mechanism':'Basic version · add a mechanism in Bonus 1 to level it up'}</h3>
+    <div class="madlib">${segsHTML(segs,{mark:true})}</div>
+    <div class="row"><button type="button" class="btn sm" data-act="copy-oneliner">Copy sentence</button></div>`;
+  // Outreach
+  const sent=num(i.out_sent), cust=num(i.out_customers);
+  $('#w-outreach').innerHTML=`<h3>Your warm outreach message</h3>
+    <div class="msg" id="msg">${esc(outreachText(i))}</div>
+    <div class="row"><button type="button" class="btn sm" data-act="copy-msg">Copy message</button></div>
+    <div class="prog"><span class="meter"><i style="width:${Math.min(100,cust/5*100)}%"></i></span>${cust} of 5 customers</div>
+    <div class="prog"><span class="meter"><i style="width:${Math.min(100,sent)}%"></i></span>${sent} messages sent · daily target 100</div>`;
+}
+const QUESTIONS=[
+  'What problems are you struggling with right now?',
+  'How long have you struggled with them?',
+  'What makes it painful, specifically?',
+  'What is it like when it isn’t working?',
+  'What would the ideal experience look like?',
+  'When you tried to fix this before, what did you have to give up that you liked?',
+  'What did you have to start doing that you hated?'];
+function outreachText(i){
+  const comp=trim(i.out_compliment)||'[a specific compliment]';
+  const one=segsText(onelinerSegs(i),m=>`[${m.toLowerCase()}]`);
+  return `Hey [first name]! ${comp.replace(/[.!]$/,'')}.\n\nQuick one: ${one}\n\nDo you know anyone who could use that?`;
+}
+
+function refreshDerived(){
+  const i=cur(); if(!i) return;
+  renderWidgets();
+  const ch=checks(i), done=ch.filter(c=>c.ok).length, pct=Math.round(done/ch.length*100);
+  $('#ready-txt').textContent=`${pct}% pitch-ready`; $('#ready-bar').style.width=pct+'%';
+  SECTIONS.forEach(s=>{
+    const c=ch.filter(x=>x.sec===s.id); const d=c.filter(x=>x.ok).length;
+    const el=$('#dot-'+s.id); if(!el) return;
+    el.className='dot'+(c.length&&d===c.length?' done':d>0?' part':'');
+    if(!c.length) el.className='dot'+(SECTIONS.find(x=>x.id===s.id).fields.some(f=>filled(i[f.k]))?' done':'');
+  });
+  renderSelect();
+  if(view==='pitch') renderPitch();
+  if(view==='deck') renderDeck();
+}
+
+/* ---------- Pitch ---------- */
+function pitchModel(i){
+  const L=(k)=>{const l=lines(i[k]);return l.length?l.map(x=>[x]):[[F(i,k)]]};
+  const traction=[];
+  if(num(i.interviews)) traction.push([`${num(i.interviews)} customer interviews completed`]);
+  if(num(i.out_sent)) traction.push([`${num(i.out_sent)} warm outreach messages sent`]);
+  if(num(i.out_customers)) traction.push([`${num(i.out_customers)} paying customer${num(i.out_customers)===1?'':'s'} so far`]);
+  lines(i.inv_traction).forEach(x=>traction.push([x]));
+  if(!traction.length) traction.push([F(i,'inv_traction')]);
+  const steps=stepsList(i);
+  const mkt=[['Market: ',F(i,'inv_market')]];
+  if(filled(i.inv_whynow)) mkt.push(['Why now: ',i.inv_whynow]);
+  mkt.push(['Why we win: ',F(i,'inv_competition')]);
+  return {
+    title:[F(i,'idea_name')],
+    elevator:onelinerSegs(i),
+    sections:[
+      {h:'The problem',p:[['Who feels it: ',CALLOUT(i),'.'],['In their words: “',F(i,'bad_specific'),'”']],
+       ul:[['Today the fix means ',F(i,'bad_start'),' and ',F(i,'bad_giveup'),'.'],['It’s slow: ',F(i,'bad_slow'),'.'],['It’s risky: ',F(i,'bad_risk'),'.']]},
+      {h:'The solution',p:[['We help them ',F(i,'good_dream'),' without ',WITHOUT(i),'.']],
+       ul:[['Fast: ',F(i,'good_speed')],['Proven: ',F(i,'good_certainty')],['Easy: ',F(i,'good_ease')]]},
+      {h:'How it works',p:[[F(i,'mech_name'),i.mech_type==='checklist'?', a checklist we take every customer through:':', a step-by-step process:']],
+       ol:steps.length?steps.map(s=>[s]):[[F(i,'mech_steps')]],
+       after:filled(i.mech_proof)?[['Proof: ',i.mech_proof]]:[]},
+      {h:'Business model',p:[['Price: ',F(i,'inv_price')]],ul:L('inv_model')},
+      {h:'Market and why we win',p:mkt},
+      {h:'Traction',ul:traction},
+      {h:'Team',p:[[filled(i.founder)?i.founder+'. ':'',F(i,'what_origin')]],ul:lines(i.inv_team).map(x=>[x])},
+      {h:'The ask',p:[['We’re raising ',F(i,'inv_ask'),'.']],sub:[{h:'Use of funds',ul:L('inv_funds')},{h:'Milestones',ul:L('inv_milestones')}]}
+    ]};
+}
+function allSegs(m){
+  const a=[m.title,m.elevator];
+  m.sections.forEach(s=>{(s.p||[]).forEach(x=>a.push(x));(s.ul||[]).forEach(x=>a.push(x));(s.ol||[]).forEach(x=>a.push(x));(s.after||[]).forEach(x=>a.push(x));(s.sub||[]).forEach(b=>b.ul.forEach(x=>a.push(x)))});
+  return a;
+}
+function pitchHTML(m){
+  const H=s=>segsHTML(s);
+  let h=`<h2>${H(m.title)}</h2><p class="elev">${H(m.elevator)}</p>`;
+  m.sections.forEach(s=>{
+    h+=`<h3>${esc(s.h)}</h3>`;
+    (s.p||[]).forEach(p=>h+=`<p>${H(p)}</p>`);
+    if(s.ul&&s.ul.length) h+=`<ul>${s.ul.map(x=>`<li>${H(x)}</li>`).join('')}</ul>`;
+    if(s.ol) h+=`<ol>${s.ol.map(x=>`<li>${H(x)}</li>`).join('')}</ol>`;
+    (s.after||[]).forEach(p=>h+=`<p>${H(p)}</p>`);
+    (s.sub||[]).forEach(b=>h+=`<p><strong>${esc(b.h)}</strong></p><ul>${b.ul.map(x=>`<li>${H(x)}</li>`).join('')}</ul>`);
+  });
+  return h;
+}
+function pitchMD(m){
+  const T=s=>segsText(s,x=>`[TBD: ${x}]`);
+  let o=`# ${T(m.title)}\n\n**${T(m.elevator)}**\n`;
+  m.sections.forEach(s=>{
+    o+=`\n## ${s.h}\n\n`;
+    (s.p||[]).forEach(p=>o+=T(p)+'\n\n');
+    (s.ul||[]).forEach(x=>o+=`- ${T(x)}\n`);
+    (s.ol||[]).forEach((x,n)=>o+=`${n+1}. ${T(x)}\n`);
+    (s.after||[]).forEach(p=>o+=`\n${T(p)}\n`);
+    (s.sub||[]).forEach(b=>{o+=`\n**${b.h}**\n\n`;b.ul.forEach(x=>o+=`- ${T(x)}\n`)});
+  });
+  return o.replace(/\n{3,}/g,'\n\n').trim()+'\n';
+}
+function mdToHTML(md){
+  const out=[]; let list=null;
+  const close=()=>{if(list){out.push(`</${list}>`);list=null}};
+  const inl=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/(^|[^*])\*([^*]+)\*/g,'$1<em>$2</em>').replace(/\[TBD:([^\]]+)\]/g,'<span class="gap">TBD:$1</span>');
+  md.split('\n').forEach(raw=>{
+    const line=raw.trimEnd(); let m;
+    if((m=line.match(/^\s*[-*•]\s+(.*)/))){if(list!=='ul'){close();out.push('<ul>');list='ul'}out.push(`<li>${inl(m[1])}</li>`);return}
+    if((m=line.match(/^\s*\d+[.)]\s+(.*)/))){if(list!=='ol'){close();out.push('<ol>');list='ol'}out.push(`<li>${inl(m[1])}</li>`);return}
+    close();
+    if((m=line.match(/^(#{1,4})\s+(.*)/))){const t=m[1].length===1?'h2':'h3';out.push(`<${t}>${inl(m[2])}</${t}>`);return}
+    if(line.trim()) out.push(`<p>${inl(line)}</p>`);
+  });
+  close(); return out.join('');
+}
+const FIELD_KEYS=[...new Set(SECTIONS.flatMap(s=>s.fields.map(f=>f.k)))];
+function basis(i){const o={};FIELD_KEYS.forEach(k=>o[k]=i[k]);return JSON.stringify(o)}
+
+let polishing=null;
+function renderPitch(){
+  const i=cur(), m=pitchModel(i), gaps=gapCount(allSegs(m));
+  $('#pv-draft').setAttribute('aria-pressed',pitchMode==='draft'); $('#pv-polish').setAttribute('aria-pressed',pitchMode==='polish');
+  const note=$('#pitch-note'); note.className='note';
+  if(pitchMode==='draft'){
+    $('#pitch-doc').innerHTML=pitchHTML(m);
+    note.textContent=gaps?`${gaps} gap${gaps===1?'':'s'} left. Click any dashed label to jump to that field.`:'Every section is filled in. Polish it with Claude, or copy it as is.';
+  } else if(!polishing){
+    if(i.pitch_polished){
+      $('#pitch-doc').innerHTML=mdToHTML(i.pitch_polished);
+      if(i.pitch_basis!==basis(i)){note.className='note warn';note.textContent='Written before your latest edits. Polish again to update it.'}
+      else note.textContent='Claude’s rewrite of your framework answers. It uses only what you entered; anything missing is marked TBD.';
+    } else {
+      $('#pitch-doc').innerHTML=`<p class="think">No polished version yet.</p><p>${sampleFn?'Choose <b>Polish with Claude</b> to turn your framework answers into a tighter investor narrative.':'Polishing with Claude isn’t available in this view. The framework draft has everything you entered.'}</p>`;
+      note.textContent='';
+    }
+  }
+  $('#btn-polish').hidden=!sampleFn||!!polishing; $('#btn-stop').hidden=!polishing;
+  $('#btn-polish').textContent=i.pitch_polished?'Polish again':'Polish with Claude';
+}
+function currentPitchMD(){
+  const i=cur();
+  return pitchMode==='polish'&&i.pitch_polished?i.pitch_polished:pitchMD(pitchModel(i));
+}
+async function polish(){
+  if(!sampleFn||polishing) return;
+  const i=cur(); const data={}; FIELD_KEYS.forEach(k=>{if(filled(i[k]))data[k]=i[k]});
+  data.call_out=calloutText(i); data.one_liner=segsText(onelinerSegs(i),m=>`[missing: ${m}]`);
+  const prompt=`You are helping a founder turn a filled-in business framework into an investor pitch. The framework follows Alex Hormozi's method: the what (pain, profession or passion), the who (a narrow avatar), the good stuff customers get (dream outcome, speed, certainty, ease), the bad stuff they avoid, a one-sentence offer, a named unique mechanism, and first-customer outreach, plus an investor layer (model, market, traction, team, ask).
+
+Write the pitch in Markdown:
+- First line: "# " followed by the business name.
+- Then a bold 2-3 sentence elevator pitch built around the one-sentence offer.
+- Then these sections, each with a "## " heading: The problem, Who we serve, The solution, How it works, Business model, Market and why we win, Traction, Team, The ask.
+- Use short paragraphs and bullet lists. Plain, confident, specific language. No hype words, no exclamation marks.
+- Use ONLY facts in the data. Never invent numbers, customers, names, quotes or market sizes. Where something an investor would expect is missing, write [TBD: what is needed].
+- Keep it under 450 words.
+
+DATA (JSON):
+${JSON.stringify(data,null,1)}`;
+  const ctl=new AbortController(); polishing=ctl; pitchMode='polish';
+  renderPitch(); $('#pitch-doc').innerHTML='<p class="think">Thinking…</p>'; $('#pitch-note').textContent='Claude is writing from your framework answers.';
+  try{
+    const {text}=await sampleFn(prompt,{signal:ctl.signal,onText:({text})=>{$('#pitch-doc').innerHTML=mdToHTML(text)}});
+    i.pitch_polished=text; i.pitch_basis=basis(i); touch(); toast('Polished pitch saved');
+  }catch(e){
+    const msg={not_granted:'Claude wasn’t allowed for this page, so the draft is unchanged.',rate_limited:'Too many requests right now. Try again in a minute.',cancelled:'Stopped.'}[e?.code]||'Claude couldn’t finish this time. Your draft is unchanged.';
+    if(e?.code==='not_granted') sampleFn=null;
+    toast(msg);
+  }finally{polishing=null; renderPitch()}
+}
+
+/* ---------- Deck ---------- */
+function slides(i){
+  const L=k=>{const l=lines(i[k]);return l.length?l.map(x=>[x]):[[F(i,k)]]};
+  const steps=stepsList(i);
+  const marketTiles=[{l:'Market',v:[F(i,'inv_market')]}];
+  if(filled(i.inv_whynow)) marketTiles.push({l:'Why now',v:[i.inv_whynow]});
+  marketTiles.push({l:'Why we win',v:[F(i,'inv_competition')]});
+  const pLabel={pain:'Lived it',profession:'Did it for a living',passion:'Obsessed with it'}[i.p_type]||'Founder fit';
+  const chips=AVATAR.filter(k=>filled(i[k])).map(k=>({l:AV_LABEL[k],v:trim(i[k])}));
+  return [
+    {kind:'title',dark:true,kicker:'Investor presentation',title:[F(i,'idea_name')],sub:onelinerSegs(i),foot:filled(i.founder)?[i.founder]:[]},
+    {kind:'list',kicker:'The problem',title:['“',F(i,'bad_specific'),'”'],bullets:[['Today the fix means ',F(i,'bad_start')],['… or ',F(i,'bad_giveup')],['It takes ',F(i,'bad_slow')],['The risk: ',F(i,'bad_risk')]]},
+    {kind:'customer',kicker:'Who we serve',title:[CALLOUT(i)],chips,lead:[pLabel+': ',F(i,'what_origin')]},
+    {kind:'tiles',kicker:'The promise',title:['We help them ',F(i,'good_dream')],tiles:[{l:'Faster',v:[F(i,'good_speed')]},{l:'Proven',v:[F(i,'good_certainty')]},{l:'Easier',v:[F(i,'good_ease')]},{l:'Without',v:[WITHOUT(i)]}]},
+    {kind:'steps',kicker:'How it works',title:[F(i,'mech_name')],steps:steps.length?steps:null,ordered:i.mech_type!=='checklist',note:filled(i.mech_proof)?['Proof: ',i.mech_proof]:null,gap:F(i,'mech_steps')},
+    {kind:'tiles',kicker:'Market and why we win',title:['A niche we can own'],tiles:marketTiles},
+    {kind:'list',kicker:'Business model',title:[F(i,'inv_price')],bullets:L('inv_model')},
+    {kind:'stats',kicker:'Traction',title:['Early proof'],stats:[{v:num(i.interviews),l:'customer interviews'},{v:num(i.out_sent),l:'outreach messages sent'},{v:num(i.out_customers),l:'paying customers'}],bullets:lines(i.inv_traction).map(x=>[x])},
+    {kind:'list',kicker:'Team',title:[filled(i.founder)?i.founder:'Why us'],lead:[F(i,'what_origin')],bullets:lines(i.inv_team).map(x=>[x])},
+    {kind:'ask',dark:true,kicker:'The ask',title:[F(i,'inv_ask')],cols:[{h:'Use of funds',items:L('inv_funds')},{h:'Milestones',items:L('inv_milestones')}]}
+  ];
+}
+function slideSegs(sl){
+  const a=[sl.title]; if(sl.sub)a.push(sl.sub); if(sl.lead)a.push(sl.lead);
+  (sl.bullets||[]).forEach(x=>a.push(x)); (sl.tiles||[]).forEach(t=>a.push(t.v));
+  (sl.cols||[]).forEach(c=>c.items.forEach(x=>a.push(x))); if(sl.kind==='steps'&&!sl.steps)a.push([sl.gap]);
+  return a;
+}
+function slideHTML(sl,n,total){
+  const S=s=>segsHTML(s,{inert:true});
+  let b='';
+  switch(sl.kind){
+    case 'title': b=`<div class="s-title s-xl">${S(sl.title)}</div><div class="s-sub">${S(sl.sub)}</div>${sl.foot.length?`<div class="s-foot">${S(sl.foot)}</div>`:''}`;break;
+    case 'list': b=`<div class="s-title">${S(sl.title)}</div>${sl.lead?`<p class="s-lead">${S(sl.lead)}</p>`:''}${sl.bullets.length?`<ul class="s-bullets">${sl.bullets.map(x=>`<li>${S(x)}</li>`).join('')}</ul>`:''}`;break;
+    case 'customer': b=`<div class="s-title">${S(sl.title)}</div>${sl.chips.length?`<div class="s-chips">${sl.chips.map(c=>`<span class="s-chip"><b>${esc(c.l)}</b>${esc(c.v)}</span>`).join('')}</div>`:''}<p class="s-lead" style="margin-top:auto">${S(sl.lead)}</p>`;break;
+    case 'tiles': b=`<div class="s-title">${S(sl.title)}</div><div class="s-tiles n${sl.tiles.length}">${sl.tiles.map(t=>`<div class="s-tile"><span class="s-tl">${esc(t.l)}</span><span class="s-tv">${S(t.v)}</span></div>`).join('')}</div>`;break;
+    case 'steps': b=`<div class="s-title">${S(sl.title)}</div>${sl.steps?`<div class="s-steps" style="grid-template-columns:repeat(${Math.min(sl.steps.length,5)},1fr)">${sl.steps.map((s,x)=>`<div class="s-step"><span class="n">${sl.ordered?x+1:'✓'}</span><span class="t">${esc(s)}</span></div>`).join('')}</div>`:`<p class="s-lead">${S([sl.gap])}</p>`}${sl.note?`<p class="s-lead" style="margin-top:auto">${S(sl.note)}</p>`:''}`;break;
+    case 'stats': b=`<div class="s-title">${S(sl.title)}</div><div class="s-stats">${sl.stats.map(s=>`<div class="s-stat"><div class="v">${s.v.toLocaleString()}</div><div class="l">${esc(s.l)}</div></div>`).join('')}</div>${sl.bullets.length?`<ul class="s-bullets">${sl.bullets.map(x=>`<li>${S(x)}</li>`).join('')}</ul>`:''}`;break;
+    case 'ask': b=`<div class="s-big">${S(sl.title)}</div><div class="s-cols">${sl.cols.map(c=>`<div><h4>${esc(c.h)}</h4><ul class="s-bullets">${c.items.map(x=>`<li>${S(x)}</li>`).join('')}</ul></div>`).join('')}</div>`;break;
+  }
+  return `<div class="slide ${sl.dark?'dark':''}"><div class="s-kicker">${esc(sl.kicker)}</div>${b}<div class="s-num">${n} / ${total}</div></div>`;
+}
+function renderDeck(){
+  const ss=slides(cur()); deckIdx=Math.max(0,Math.min(deckIdx,ss.length-1));
+  $('#stage').innerHTML=slideHTML(ss[deckIdx],deckIdx+1,ss.length);
+  $('#thumbs').innerHTML=ss.map((s,n)=>`<button type="button" class="thumb" data-slide="${n}" aria-label="Slide ${n+1}: ${esc(s.kicker)}" ${n===deckIdx?'aria-current="true"':''}>${slideHTML(s,n+1,ss.length)}</button>`).join('');
+  $('#d-count').textContent=`${deckIdx+1} / ${ss.length}`;
+  const g=ss.reduce((t,s)=>t+gapCount(slideSegs(s)),0);
+  $('#deck-gaps').textContent=g?`${g} gap${g===1?'':'s'} show as [TBD] in the download`:'No gaps';
+}
+
+/* PPTX export (PptxGenJS, loaded on demand) */
+function loadPptx(){
+  if(window.PptxGenJS) return Promise.resolve();
+  return new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';s.onload=res;s.onerror=()=>rej(new Error('load'));document.head.appendChild(s)});
+}
+async function buildPptx(i){
+  await loadPptx();
+  const T=s=>segsText(s,m=>`[TBD: ${m}]`);
+  const pptx=new window.PptxGenJS(); pptx.layout='LAYOUT_WIDE'; pptx.title=trim(i.idea_name)||'Pitch deck';
+  const W=13.333,M=0.75,FONT='Arial';
+  const ss=slides(i);
+  ss.forEach((sl,n)=>{
+    const s=pptx.addSlide(); const dk=!!sl.dark;
+    const ink=dk?'EEF2F7':'15233A', mute=dk?'C5CFDD':'4E5A6C', acc=dk?'F2B544':'A26E06';
+    s.background={color:dk?'15233A':'FFFFFF'};
+    s.addText(sl.kicker.toUpperCase(),{x:M,y:0.45,w:W-2*M,h:0.35,fontFace:FONT,fontSize:12,bold:true,color:acc,charSpacing:4,margin:0});
+    s.addShape(pptx.ShapeType.rect,{x:M,y:0.88,w:0.55,h:0.06,fill:{color:'E3A01B'},line:{color:'E3A01B',width:0}});
+    s.addText(`${n+1} / ${ss.length}`,{x:W-1.6,y:7.0,w:1.0,h:0.3,fontFace:FONT,fontSize:10,color:'9AA4B2',align:'right',margin:0});
+    const title=(y,h,size=30)=>s.addText(T(sl.title),{x:M,y,w:W-2*M,h,fontFace:FONT,fontSize:size,bold:true,color:ink,valign:'top',fit:'shrink',margin:0});
+    const bullets=(items,x,y,w,h,size=18)=>{ if(!items.length) return; s.addText(items.map(b=>({text:T(b),options:{bullet:{code:'25A0'},paraSpaceAfter:8}})),{x,y,w,h,fontFace:FONT,fontSize:size,color:ink,valign:'top',fit:'shrink',margin:0}); };
+    switch(sl.kind){
+      case 'title':
+        s.addText(T(sl.title),{x:M,y:2.0,w:W-2*M,h:1.3,fontFace:FONT,fontSize:54,bold:true,color:ink,valign:'bottom',fit:'shrink',margin:0});
+        s.addText(T(sl.sub),{x:M,y:3.5,w:W*0.75,h:1.8,fontFace:FONT,fontSize:22,color:mute,valign:'top',fit:'shrink',margin:0});
+        if(sl.foot.length) s.addText(T(sl.foot),{x:M,y:6.5,w:8,h:0.4,fontFace:FONT,fontSize:14,color:mute,margin:0});
+        break;
+      case 'list':
+        title(1.15,1.5);
+        if(sl.lead) s.addText(T(sl.lead),{x:M,y:2.75,w:W-2*M,h:0.9,fontFace:FONT,fontSize:16,color:mute,valign:'top',fit:'shrink',margin:0});
+        bullets(sl.bullets,M,sl.lead?3.75:2.9,W-2*M,sl.lead?3.0:3.9);
+        break;
+      case 'customer':
+        title(1.15,1.6,28);
+        sl.chips.forEach((c,x)=>{const cw=(W-2*M-0.2*4)/5;s.addShape(pptx.ShapeType.roundRect,{x:M+x*(cw+0.2),y:3.0,w:cw,h:1.0,fill:{color:'FFF3D1'},line:{color:'FFF3D1',width:0},rectRadius:0.08});
+          s.addText([{text:c.l.toUpperCase()+'\n',options:{fontSize:9,bold:true,color:'8A5A00',charSpacing:2}},{text:c.v,options:{fontSize:13,color:'15233A'}}],{x:M+x*(cw+0.2)+0.12,y:3.05,w:cw-0.24,h:0.9,fontFace:FONT,valign:'middle',fit:'shrink',margin:0});});
+        s.addText(T(sl.lead),{x:M,y:4.6,w:W-2*M,h:1.9,fontFace:FONT,fontSize:16,color:mute,valign:'top',fit:'shrink',margin:0});
+        break;
+      case 'tiles':{
+        title(1.15,1.3);
+        const cols=sl.tiles.length===3?3:2, rows=Math.ceil(sl.tiles.length/cols), g=0.25, tw=(W-2*M-g*(cols-1))/cols, th=(4.4-g*(rows-1))/rows;
+        sl.tiles.forEach((t,x)=>{const cx=M+(x%cols)*(tw+g), cy=2.65+Math.floor(x/cols)*(th+g);
+          s.addShape(pptx.ShapeType.roundRect,{x:cx,y:cy,w:tw,h:th,fill:{color:'F1F4F7'},line:{color:'F1F4F7',width:0},rectRadius:0.08});
+          s.addText(t.l.toUpperCase(),{x:cx+0.25,y:cy+0.2,w:tw-0.5,h:0.3,fontFace:FONT,fontSize:10,bold:true,color:'A26E06',charSpacing:3,margin:0});
+          s.addText(T(t.v),{x:cx+0.25,y:cy+0.55,w:tw-0.5,h:th-0.75,fontFace:FONT,fontSize:16,color:'15233A',valign:'top',fit:'shrink',margin:0});});
+        break;}
+      case 'steps':
+        title(1.15,1.2);
+        if(sl.steps){const k=Math.min(sl.steps.length,5), g=0.3, cw=(W-2*M-g*(k-1))/k;
+          sl.steps.slice(0,5).forEach((st,x)=>{const cx=M+x*(cw+g);
+            s.addShape(pptx.ShapeType.ellipse,{x:cx,y:2.8,w:0.75,h:0.75,fill:{color:'E3A01B'},line:{color:'E3A01B',width:0}});
+            s.addText(sl.ordered?String(x+1):'✓',{x:cx,y:2.8,w:0.75,h:0.75,fontFace:FONT,fontSize:20,bold:true,color:'15233A',align:'center',valign:'middle',margin:0});
+            s.addText(st,{x:cx,y:3.75,w:cw,h:1.4,fontFace:FONT,fontSize:20,bold:true,color:ink,valign:'top',fit:'shrink',margin:0});});
+          if(sl.steps.length>5) s.addText('Also: '+sl.steps.slice(5).join(', '),{x:M,y:5.2,w:W-2*M,h:0.4,fontFace:FONT,fontSize:14,color:mute,margin:0});
+        } else s.addText(T([sl.gap]),{x:M,y:2.9,w:W-2*M,h:0.6,fontFace:FONT,fontSize:18,color:mute,margin:0});
+        if(sl.note) s.addText(T(sl.note),{x:M,y:5.8,w:W-2*M,h:1.0,fontFace:FONT,fontSize:15,color:mute,valign:'top',fit:'shrink',margin:0});
+        break;
+      case 'stats':{
+        title(1.15,1.0);
+        const cw=(W-2*M)/3;
+        sl.stats.forEach((st,x)=>{s.addText(st.v.toLocaleString(),{x:M+x*cw,y:2.4,w:cw-0.2,h:1.2,fontFace:FONT,fontSize:60,bold:true,color:ink,margin:0});
+          s.addText(st.l,{x:M+x*cw,y:3.6,w:cw-0.2,h:0.4,fontFace:FONT,fontSize:15,color:mute,margin:0});});
+        bullets(sl.bullets,M,4.5,W-2*M,2.3);
+        break;}
+      case 'ask':
+        s.addText(T(sl.title),{x:M,y:1.3,w:W-2*M,h:1.3,fontFace:FONT,fontSize:54,bold:true,color:'F2B544',valign:'middle',fit:'shrink',margin:0});
+        sl.cols.forEach((c,x)=>{const cx=M+x*((W-2*M)/2+0.2), cw=(W-2*M)/2-0.2;
+          s.addText(c.h.toUpperCase(),{x:cx,y:3.0,w:cw,h:0.35,fontFace:FONT,fontSize:11,bold:true,color:'A9B4C6',charSpacing:3,margin:0});
+          s.addText(c.items.map(b=>({text:T(b),options:{bullet:{code:'25A0'},paraSpaceAfter:8}})),{x:cx,y:3.5,w:cw,h:3.2,fontFace:FONT,fontSize:18,color:ink,valign:'top',fit:'shrink',margin:0});});
+        break;
+    }
+  });
+  return pptx.write({outputType:'blob'});
+}
+
+/* ---------- Storage: private per-person store, with this-browser fallback ---------- */
+const store={col:null,ready:false};
+const pending=new Map(), inflight=new Set();
+let writeChain=Promise.resolve(), localOK=true;
+function saveLocal(){try{localStorage.setItem('bbi.ideas',JSON.stringify(ideas));localStorage.setItem('bbi.current',currentId)}catch{localOK=false}}
+function loadLocal(){try{const raw=localStorage.getItem('bbi.ideas');if(raw){ideas=JSON.parse(raw)||{};currentId=localStorage.getItem('bbi.current')}}catch{}}
+function setStatus(){
+  const el=$('#status');
+  if(pending.size||inflight.size){el.textContent='Saving…';return}
+  if(store.col) el.textContent=cur()?.pristine?'Example · edits save automatically':'Saved · private to you';
+  else el.textContent=localOK?'Saved in this browser':'Not saved';
+}
+function queueSave(id,delay=900){
+  clearTimeout(pending.get(id));
+  pending.set(id,setTimeout(()=>flush(id),delay)); saveLocal(); setStatus();
+}
+function flush(id){
+  pending.delete(id);
+  if(!store.col||!ideas[id]){setStatus();return}
+  inflight.add(id); const data=clone(ideas[id]); setStatus();
+  writeChain=writeChain.then(()=>store.col.doc(id).set(data)).catch(e=>{
+    toast(e?.code==='quota_exceeded'?'Storage is full. Delete an old idea to save new ones.':'Couldn’t save to your account. Your work is kept in this browser.');
+  }).finally(()=>{inflight.delete(id);setStatus()});
+}
+function touch(){const i=cur();i.updatedAt=Date.now();delete i.pristine;queueSave(currentId)}
+
+async function initStore(){
+  if(!window.claude?.use){setStatus();return}
+  const [db,user]=await Promise.all([claude.use('db'),claude.use('user')]);
+  if(!db||!user){setStatus();return}
+  let id=null; try{id=await user.id()}catch{}
+  if(!id){setStatus();return}
+  try{store.col=db.collection('data/users/'+id)}catch{setStatus();return}
+  let firstFinal=true;
+  const timer=setTimeout(()=>{if(!store.ready)$('#status').textContent='Can’t reach your saved ideas yet'},10000);
+  store.col.onSnapshot(snap=>{
+    const final=!snap.metadata.fromCache; if(final){clearTimeout(timer);store.ready=true}
+    let curChanged=false; const seen=new Set();
+    snap.docs.forEach(d=>{
+      seen.add(d.id); if(pending.has(d.id)||inflight.has(d.id)) return;
+      const r=d.data(), l=ideas[d.id];
+      if(!l||(r.updatedAt||0)>(l.updatedAt||0)){ideas[d.id]=clone(r);if(d.id===currentId)curChanged=true}
+    });
+    snap.docChanges().forEach(ch=>{if(ch.type==='removed'&&!pending.has(ch.doc.id)&&!inflight.has(ch.doc.id)){delete ideas[ch.doc.id]}});
+    if(final&&firstFinal){
+      firstFinal=false;
+      Object.keys(ideas).forEach(k=>{if(!seen.has(k)&&!ideas[k].pristine) queueSave(k,50)});
+      if(cur()?.pristine&&snap.size){currentId=mostRecent();curChanged=true}
+    }
+    if(!ideas[currentId]){currentId=mostRecent()||addExample();curChanged=true}
+    if(curChanged&&!document.activeElement?.matches?.('input,textarea')) fillForm(); else refreshDerived();
+    saveLocal(); setStatus();
+  },()=>{store.col=null;setStatus()});
+}
+function mostRecent(){const l=Object.values(ideas).filter(x=>x&&x.id);l.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));return l[0]?.id||null}
+function addExample(){const id=uid();ideas[id]={...clone(EXAMPLE),id,createdAt:Date.now(),updatedAt:0};return id}
+function newIdea(){const id=uid();ideas[id]={id,createdAt:Date.now(),updatedAt:Date.now(),idea_name:'',mech_type:'sequence',mech_steps:['','',''],p_type:'',who_type:''};currentId=id;queueSave(id,0);return id}
+
+function renderSelect(){
+  const sel=$('#idea-sel');
+  const list=Object.values(ideas).filter(x=>x&&x.id).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  sel.innerHTML=list.map(x=>`<option value="${x.id}" ${x.id===currentId?'selected':''}>${esc((trim(x.idea_name)||'Untitled idea')+(x.example?' (example)':''))}</option>`).join('');
+}
+
+/* ---------- Capabilities: Claude polish + downloads ---------- */
+let sampleFn=null, downloadsNs=null;
+const STANDALONE=!window.claude?.use; // opened as a plain web page (e.g. GitHub Pages), not inside Claude
+function updateCapUI(){const dl=!!downloadsNs||STANDALONE;$('#btn-dl-md').hidden=!dl;$('#btn-dl-pptx').hidden=!dl;if(view==='pitch')renderPitch()}
+async function saveFile(filename,data){
+  if(STANDALONE){
+    const blob=data instanceof Blob?data:new Blob([data],{type:'text/markdown'});
+    const url=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000); toast('Downloaded '+filename); return;
+  }
+  if(!downloadsNs) return;
+  try{await downloadsNs.save({filename,data});toast('Downloaded '+filename)}
+  catch(e){if(e?.code==='declined')return; if(['unavailable','not_granted','capability_disabled','capability_removed'].includes(e?.code)){downloadsNs=null;updateCapUI()} toast(e?.code==='rate_limited'?'A download prompt is already open.':'That download didn’t go through.')}
+}
+const fileBase=()=>(trim(cur().idea_name)||'idea').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')||'idea';
+
+/* ---------- UI plumbing ---------- */
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
+async function copy(text){
+  try{await navigator.clipboard.writeText(text);toast('Copied')}
+  catch{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch{}ta.remove();toast(ok?'Copied':'Copy was blocked. Select the text and copy it manually.')}
+}
+const VIEWS=['build','pitch','deck'];
+function setView(v,push=true){
+  if(!VIEWS.includes(v)) v='build'; view=v;
+  VIEWS.forEach(x=>{$('#view-'+x).hidden=x!==v;const t=$('#tab-'+x);t.setAttribute('aria-selected',x===v)});
+  if(v==='pitch') renderPitch(); if(v==='deck') renderDeck();
+  if(push&&location.hash!=='#'+v){try{history.replaceState(null,'','#'+v)}catch{location.hash=v}}
+}
+function goto(k){
+  setView('build');
+  const id=k==='mech_steps'?'f-mech_steps-0':'f-'+k;
+  const el=document.getElementById(id)||document.getElementById('s-'+(SECTIONS.find(s=>s.fields.some(f=>f.k===k))?.id));
+  if(!el) return;
+  el.scrollIntoView({block:'center'});
+  const focusEl=el.matches('fieldset')?el.querySelector('input'):el;
+  setTimeout(()=>focusEl?.focus?.({preventScroll:true}),250);
+}
+
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-goto]'); if(g&&!g.closest('.slide')){goto(g.dataset.goto);return}
+  const a=e.target.closest('[data-act]'); if(a){
+    const i=cur();
+    if(a.dataset.act==='add-step'){i.mech_steps.push('');renderSteps();touch();document.getElementById('f-mech_steps-'+(i.mech_steps.length-1))?.focus()}
+    if(a.dataset.act==='rm-step'){i.mech_steps.splice(+a.dataset.i,1);renderSteps();touch();refreshDerived()}
+    if(a.dataset.act==='copy-qs') copy(QUESTIONS.map((q,n)=>`${n+1}. ${q}`).join('\n'));
+    if(a.dataset.act==='copy-oneliner') copy(segsText(onelinerSegs(i)));
+    if(a.dataset.act==='copy-msg') copy(outreachText(i));
+    return;
+  }
+  const t=e.target.closest('.tab'); if(t){setView(t.dataset.view);window.scrollTo({top:0});return}
+  const th=e.target.closest('.thumb'); if(th){deckIdx=+th.dataset.slide;renderDeck();return}
+  const rl=e.target.closest('.rail a'); if(rl){e.preventDefault();document.getElementById('s-'+rl.dataset.sec)?.scrollIntoView({block:'start'});}
+});
+$('#sheet').addEventListener('input',e=>{
+  const el=e.target, i=cur(); if(!i) return;
+  if(el.dataset.k){i[el.dataset.k]=el.dataset.num?(el.value===''?'':Math.max(0,Number(el.value))):el.value}
+  else if(el.dataset.step!==undefined){i.mech_steps[+el.dataset.step]=el.value}
+  else return;
+  touch(); refreshDerived();
+});
+$('#sheet').addEventListener('change',e=>{const el=e.target;if(el.dataset.radio){cur()[el.dataset.radio]=el.value;if(el.dataset.radio==='mech_type')renderSteps();touch();refreshDerived()}});
+$('#idea-sel').addEventListener('change',e=>{currentId=e.target.value;pitchMode='draft';deckIdx=0;fillForm();saveLocal();setStatus();if(view!=='build')setView(view,false)});
+$('#btn-new').addEventListener('click',()=>{newIdea();fillForm();setView('build');window.scrollTo({top:0});document.getElementById('f-idea_name')?.focus();toast('New idea started')});
+$('#btn-dup').addEventListener('click',()=>{const src=clone(cur());const id=uid();Object.assign(src,{id,createdAt:Date.now(),updatedAt:Date.now(),idea_name:(trim(src.idea_name)||'Untitled')+' (copy)'});delete src.example;delete src.pristine;ideas[id]=src;currentId=id;queueSave(id,0);fillForm();toast('Duplicated')});
+let delArm=null;
+$('#btn-del').addEventListener('click',()=>{
+  const b=$('#btn-del');
+  if(delArm!==currentId){delArm=currentId;b.textContent='Confirm delete';b.classList.add('danger');setTimeout(()=>{if(delArm){delArm=null;b.textContent='Delete';b.classList.remove('danger')}},4000);return}
+  const id=currentId; delArm=null; b.textContent='Delete'; b.classList.remove('danger');
+  clearTimeout(pending.get(id)); pending.delete(id); delete ideas[id];
+  if(store.col) store.col.doc(id).delete().catch(()=>toast('Couldn’t delete it from your account.'));
+  currentId=mostRecent()||addExample(); saveLocal(); fillForm(); setStatus(); toast('Idea deleted');
+});
+$('#pv-draft').addEventListener('click',()=>{pitchMode='draft';renderPitch()});
+$('#pv-polish').addEventListener('click',()=>{pitchMode='polish';renderPitch()});
+$('#btn-polish').addEventListener('click',polish);
+$('#btn-stop').addEventListener('click',()=>polishing?.abort());
+$('#btn-copy-pitch').addEventListener('click',()=>copy(currentPitchMD()));
+$('#btn-dl-md').addEventListener('click',()=>saveFile(fileBase()+'-investor-pitch.md',currentPitchMD()));
+$('#btn-dl-pptx').addEventListener('click',async()=>{
+  const b=$('#btn-dl-pptx'); b.disabled=true; b.textContent='Building deck…';
+  let blob=null; try{blob=await buildPptx(cur())}catch{toast('Couldn’t build the deck file. Check your connection and try again.')}
+  b.disabled=false; b.textContent='Download .pptx';
+  if(blob) saveFile(fileBase()+'-pitch-deck.pptx',blob);
+});
+$('#d-prev').addEventListener('click',()=>{deckIdx--;renderDeck()});
+$('#d-next').addEventListener('click',()=>{deckIdx++;renderDeck()});
+$('#d-present').addEventListener('click',()=>{const st=$('#stage');try{st.requestFullscreen?.().catch(()=>toast('Full screen isn’t available here. Use the arrow keys to step through.'))}catch{}});
+document.addEventListener('keydown',e=>{
+  if(view!=='deck'||e.target.matches('input,textarea,select')) return;
+  if(e.key==='ArrowRight'||e.key===' '){deckIdx=Math.min(deckIdx+1,9);renderDeck();e.preventDefault()}
+  if(e.key==='ArrowLeft'){deckIdx=Math.max(deckIdx-1,0);renderDeck();e.preventDefault()}
+});
+window.addEventListener('hashchange',()=>setView(location.hash.slice(1),false));
+new ResizeObserver(()=>document.documentElement.style.setProperty('--hdr',$('#hdr').offsetHeight+'px')).observe($('#hdr'));
+
+/* ---------- Boot ---------- */
+loadLocal();
+Object.keys(ideas).forEach(k=>{if(!ideas[k]||!ideas[k].id)delete ideas[k]});
+if(!ideas[currentId]) currentId=mostRecent()||addExample();
+renderBuildShell(); fillForm(); setView(location.hash.slice(1)||'build',false); setStatus(); updateCapUI();
+if(window.claude?.use){
+  claude.use('sample').then(s=>{sampleFn=s;updateCapUI()});
+  claude.use('downloads').then(d=>{downloadsNs=d;updateCapUI()});
+  initStore();
+}
+</script>
+</body>
+</html>
